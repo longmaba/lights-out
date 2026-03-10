@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3x3 Number Equalizer Prototype</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --tile: #1f2937;
+      --tile-hover: #334155;
+      --text: #f8fafc;
+      --accent: #22c55e;
+      --muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, #1e293b, var(--bg));
+      color: var(--text);
+      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    .game {
+      width: min(92vw, 440px);
+      background: color-mix(in hsl, var(--panel) 90%, black);
+      border: 1px solid #374151;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 12px 40px rgb(0 0 0 / 35%);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.25rem;
+      text-align: center;
+    }
+
+    .subtitle {
+      margin: 0 0 10px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.92rem;
+      line-height: 1.4;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .tile {
+      aspect-ratio: 1 / 1;
+      border: 1px solid #475569;
+      border-radius: 10px;
+      background: var(--tile);
+      color: var(--text);
+      font-size: 2rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.08s ease, background 0.15s ease;
+    }
+
+    .tile:hover {
+      background: var(--tile-hover);
+      transform: translateY(-1px);
+    }
+
+    .tile:active { transform: translateY(0); }
+
+    .tile:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .status {
+      min-height: 1.5em;
+      margin: 0;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .status.win { color: var(--accent); }
+
+    .controls {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 1px solid #64748b;
+      background: #1e293b;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn:hover { background: #334155; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <main class="game">
+    <h1>3x3 Number Equalizer</h1>
+    <p class="subtitle">Click a tile > 1 to reduce it by 1 and add +1 to orthogonal neighbors. Move is blocked if any neighbor is already 4.</p>
+
+    <div class="meta">
+      <span id="levelLabel"></span>
+      <span id="moveLabel"></span>
+    </div>
+
+    <section class="board" id="board" aria-label="3 by 3 game board"></section>
+
+    <p class="status" id="status"></p>
+
+    <div class="controls">
+      <button class="btn" id="restartBtn" type="button">Restart Level</button>
+      <button class="btn" id="nextBtn" type="button">Next Level</button>
+      <button class="btn" id="newPackBtn" type="button">New Pack</button>
+    </div>
+  </main>
+
+  <script>
+    const SIZE = 3;
+    const MIN = 1;
+    const MAX = 4;
+    const LEVEL_COUNT = 10;
+
+    const boardEl = document.getElementById('board');
+    const statusEl = document.getElementById('status');
+    const levelLabelEl = document.getElementById('levelLabel');
+    const moveLabelEl = document.getElementById('moveLabel');
+    const restartBtn = document.getElementById('restartBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const newPackBtn = document.getElementById('newPackBtn');
+
+    let levels = [];
+    let currentLevel = 0;
+    let state = [];
+    let initialState = [];
+    let moves = 0;
+
+    function cloneBoard(board) {
+      return board.map((row) => row.slice());
+    }
+
+    function isAllEqual(board) {
+      const target = board[0][0];
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          if (board[r][c] !== target) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    function getNeighbors(row, col) {
+      const candidates = [
+        [row - 1, col],
+        [row + 1, col],
+        [row, col - 1],
+        [row, col + 1]
+      ];
+      return candidates.filter(([r, c]) => r >= 0 && r < SIZE && c >= 0 && c < SIZE);
+    }
+
+    function canApplyReverse(board, row, col) {
+      if (board[row][col] >= MAX) {
+        return false;
+      }
+      const neighbors = getNeighbors(row, col);
+      return neighbors.every(([r, c]) => board[r][c] > MIN);
+    }
+
+    // Reverse generation move: +1 center, -1 neighbors.
+    // Any board made this way is solvable by replaying forward moves.
+    function applyReverse(board, row, col) {
+      board[row][col] += 1;
+      getNeighbors(row, col).forEach(([r, c]) => {
+        board[r][c] -= 1;
+      });
+    }
+
+    function createSolvedBoard(value) {
+      return Array.from({ length: SIZE }, () => Array.from({ length: SIZE }, () => value));
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function generateWinnableLevel(reverseSteps) {
+      for (let attempt = 0; attempt < 100; attempt++) {
+        const solvedValue = randomInt(2, 3);
+        const board = createSolvedBoard(solvedValue);
+
+        for (let i = 0; i < reverseSteps; i++) {
+          const legalMoves = [];
+          for (let r = 0; r < SIZE; r++) {
+            for (let c = 0; c < SIZE; c++) {
+              if (canApplyReverse(board, r, c)) {
+                legalMoves.push([r, c]);
+              }
+            }
+          }
+
+          if (legalMoves.length === 0) {
+            break;
+          }
+
+          const [row, col] = legalMoves[randomInt(0, legalMoves.length - 1)];
+          applyReverse(board, row, col);
+        }
+
+        if (!isAllEqual(board)) {
+          return board;
+        }
+      }
+
+      // Fallback static board, known to be solvable from an all-2 target.
+      return [
+        [2, 3, 2],
+        [1, 3, 1],
+        [2, 2, 2]
+      ];
+    }
+
+    function generateLevelPack() {
+      const pack = [];
+      for (let i = 0; i < LEVEL_COUNT; i++) {
+        const reverseSteps = 3 + i;
+        pack.push(generateWinnableLevel(reverseSteps));
+      }
+      return pack;
+    }
+
+    function isWin() {
+      return isAllEqual(state);
+    }
+
+    function canApplyForwardMove(row, col) {
+      if (state[row][col] <= MIN) {
+        return false;
+      }
+
+      // New rule: cannot distribute if any neighbor is already at max.
+      return getNeighbors(row, col).every(([r, c]) => state[r][c] < MAX);
+    }
+
+    function applyForwardMove(row, col) {
+      if (!canApplyForwardMove(row, col)) {
+        return false;
+      }
+
+      state[row][col] -= 1;
+      getNeighbors(row, col).forEach(([r, c]) => {
+        state[r][c] += 1;
+      });
+      return true;
+    }
+
+    function onTileClick(row, col) {
+      if (isWin()) {
+        return;
+      }
+
+      const moved = applyForwardMove(row, col);
+      if (!moved) {
+        statusEl.classList.remove('win');
+        if (state[row][col] <= MIN) {
+          statusEl.textContent = 'That tile is already 1. Choose a tile greater than 1.';
+        } else {
+          statusEl.textContent = 'Move blocked: a neighboring tile is already 4.';
+        }
+        render();
+        return;
+      }
+
+      moves += 1;
+      render();
+    }
+
+    function loadLevel(index) {
+      currentLevel = index;
+      initialState = cloneBoard(levels[currentLevel]);
+      state = cloneBoard(initialState);
+      moves = 0;
+      render();
+    }
+
+    function render() {
+      const won = isWin();
+      boardEl.innerHTML = '';
+
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          const value = state[r][c];
+          const btn = document.createElement('button');
+          btn.className = 'tile';
+          btn.type = 'button';
+          btn.textContent = String(value);
+          btn.disabled = won || !canApplyForwardMove(r, c);
+          btn.addEventListener('click', () => onTileClick(r, c));
+          boardEl.appendChild(btn);
+        }
+      }
+
+      levelLabelEl.textContent = `Level ${currentLevel + 1}/${LEVEL_COUNT}`;
+      moveLabelEl.textContent = `Moves: ${moves}`;
+
+      if (won) {
+        statusEl.classList.add('win');
+        statusEl.textContent = `Solved in ${moves} moves. All tiles are ${state[0][0]}.`;
+      } else {
+        statusEl.classList.remove('win');
+        statusEl.textContent = 'Make all 9 tiles equal.';
+      }
+
+      nextBtn.disabled = !won || currentLevel === LEVEL_COUNT - 1;
+    }
+
+    restartBtn.addEventListener('click', () => {
+      state = cloneBoard(initialState);
+      moves = 0;
+      render();
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (currentLevel < LEVEL_COUNT - 1) {
+        loadLevel(currentLevel + 1);
+      }
+    });
+
+    newPackBtn.addEventListener('click', () => {
+      levels = generateLevelPack();
+      loadLevel(0);
+    });
+
+    levels = generateLevelPack();
+    loadLevel(0);
+  </script>
+</body>
+</html>
+
