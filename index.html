@@ -1,62 +1,104 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>3x3 Number Equalizer Prototype</title>
   <style>
     :root {
-      --bg: #0f172a;
-      --panel: #111827;
-      --tile: #1f2937;
-      --tile-hover: #334155;
-      --text: #f8fafc;
-      --accent: #22c55e;
+      --bg: #050816;
+      --panel: #0b1225;
+      --panel-border: #1e2a4f;
+      --text: #e6f0ff;
+      --accent: #22d3ee;
+      --accent-2: #a78bfa;
+      --success: #22c55e;
       --muted: #94a3b8;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
       min-height: 100vh;
       display: grid;
       place-items: center;
-      background: radial-gradient(circle at top, #1e293b, var(--bg));
+      background:
+        radial-gradient(circle at 20% 8%, rgb(167 139 250 / 18%), transparent 40%),
+        radial-gradient(circle at 80% 12%, rgb(34 211 238 / 20%), transparent 45%),
+        linear-gradient(180deg, #040714 0%, var(--bg) 60%, #02040f 100%);
       color: var(--text);
       font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.16;
+      background-image:
+        linear-gradient(rgb(148 163 184 / 0.14) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(148 163 184 / 0.14) 1px, transparent 1px);
+      background-size: 28px 28px;
     }
 
     .game {
-      width: min(92vw, 440px);
-      background: color-mix(in hsl, var(--panel) 90%, black);
-      border: 1px solid #374151;
-      border-radius: 14px;
-      padding: 18px;
-      box-shadow: 0 12px 40px rgb(0 0 0 / 35%);
+      width: min(92vw, 460px);
+      background:
+        linear-gradient(160deg, rgb(14 22 45 / 95%), rgb(7 13 28 / 95%)),
+        color-mix(in hsl, var(--panel) 88%, black);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow:
+        0 18px 55px rgb(0 0 0 / 52%),
+        0 0 0 1px rgb(34 211 238 / 18%),
+        0 0 24px rgb(34 211 238 / 18%);
+      backdrop-filter: blur(2px);
     }
 
     h1 {
       margin: 0 0 8px;
-      font-size: 1.25rem;
+      font-size: 1.35rem;
       text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      text-shadow: 0 0 14px rgb(34 211 238 / 35%);
     }
 
     .subtitle {
-      margin: 0 0 10px;
+      margin: 0 0 12px;
       color: var(--muted);
       text-align: center;
-      font-size: 0.92rem;
-      line-height: 1.4;
+      font-size: 0.9rem;
+      line-height: 1.45;
     }
 
     .meta {
-      display: flex;
-      justify-content: space-between;
-      margin: 0 0 12px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin: 0 0 14px;
       color: var(--muted);
-      font-size: 0.9rem;
-      font-weight: 600;
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .meta span {
+      border: 1px solid rgb(56 189 248 / 24%);
+      border-radius: 9px;
+      padding: 7px 8px;
+      text-align: center;
+      background: rgb(15 23 42 / 65%);
+      box-shadow: inset 0 0 10px rgb(56 189 248 / 9%);
     }
 
     .board {
@@ -64,72 +106,227 @@
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
       margin-bottom: 14px;
+      padding: 10px;
+      border-radius: 12px;
+      background: rgb(2 6 23 / 55%);
+      border: 1px solid rgb(148 163 184 / 16%);
+      box-shadow: inset 0 0 20px rgb(34 211 238 / 10%);
     }
 
     .tile {
       aspect-ratio: 1 / 1;
-      border: 1px solid #475569;
-      border-radius: 10px;
-      background: var(--tile);
+      border: 1px solid #3b4f79;
+      border-radius: 11px;
+      background: linear-gradient(180deg, #182a52 0%, #0f1c3a 100%);
       color: var(--text);
       font-size: 2rem;
-      font-weight: 700;
+      font-weight: 800;
       cursor: pointer;
-      transition: transform 0.08s ease, background 0.15s ease;
+      transition: transform 0.08s ease, background 0.15s ease, box-shadow 0.15s ease;
+      position: relative;
+      overflow: visible;
+      text-shadow: 0 0 10px rgb(224 242 254 / 30%);
+      box-shadow: inset 0 -6px 0 rgb(0 0 0 / 20%), 0 0 0 1px rgb(59 130 246 / 22%);
+    }
+
+    .tile.value-1 {
+      border-color: #475569;
+      background:
+        radial-gradient(circle at 30% 20%, rgb(255 255 255 / 18%), transparent 42%),
+        linear-gradient(180deg, #334155 0%, #1e293b 100%);
+      color: #f1f5f9;
+      text-shadow: 0 0 10px rgb(241 245 249 / 36%);
+      box-shadow: inset 0 -6px 0 rgb(0 0 0 / 24%), 0 0 0 1px rgb(148 163 184 / 30%), 0 0 14px rgb(148 163 184 / 28%);
+    }
+
+    .tile.value-2 {
+      border-color: #2563eb;
+      background:
+        radial-gradient(circle at 32% 18%, rgb(255 255 255 / 22%), transparent 42%),
+        linear-gradient(180deg, #38bdf8 0%, #2563eb 48%, #1e3a8a 100%);
+      color: #ecfeff;
+      text-shadow: 0 0 12px rgb(103 232 249 / 55%);
+      box-shadow: inset 0 -6px 0 rgb(0 0 0 / 24%), 0 0 0 1px rgb(56 189 248 / 42%), 0 0 16px rgb(56 189 248 / 42%);
+    }
+
+    .tile.value-3 {
+      border-color: #7c3aed;
+      background:
+        radial-gradient(circle at 32% 18%, rgb(255 255 255 / 20%), transparent 42%),
+        linear-gradient(180deg, #c084fc 0%, #8b5cf6 45%, #6d28d9 100%);
+      color: #f5f3ff;
+      text-shadow: 0 0 12px rgb(196 181 253 / 56%);
+      box-shadow: inset 0 -6px 0 rgb(0 0 0 / 24%), 0 0 0 1px rgb(167 139 250 / 42%), 0 0 16px rgb(167 139 250 / 40%);
+    }
+
+    .tile.value-4 {
+      border-color: #d97706;
+      background:
+        radial-gradient(circle at 32% 18%, rgb(255 255 255 / 20%), transparent 42%),
+        linear-gradient(180deg, #fcd34d 0%, #f59e0b 43%, #c2410c 100%);
+      color: #fff7ed;
+      text-shadow: 0 0 12px rgb(253 186 116 / 60%);
+      box-shadow: inset 0 -6px 0 rgb(0 0 0 / 24%), 0 0 0 1px rgb(251 146 60 / 46%), 0 0 18px rgb(249 115 22 / 40%);
+    }
+
+    .tile-value {
+      display: inline-block;
+      position: relative;
+      z-index: 2;
+    }
+
+    .tile-added {
+      animation: tileShakeRotate 320ms ease-out;
+    }
+
+    .particle {
+      position: absolute;
+      left: var(--sx, 50%);
+      top: var(--sy, 50%);
+      width: 5px;
+      height: 5px;
+      border-radius: 1px;
+      background: linear-gradient(145deg, #fde68a, #f59e0b 65%);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      box-shadow: 0 0 8px rgb(245 158 11 / 60%);
+      will-change: transform, opacity;
+    }
+
+    @keyframes tileShakeRotate {
+      0% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+      }
+
+      20% {
+        transform: translate(-1px, 1px) rotate(-5deg) scale(1.03);
+      }
+
+      40% {
+        transform: translate(1px, -1px) rotate(4.6deg) scale(1.04);
+      }
+
+      60% {
+        transform: translate(-1px, 0) rotate(-3.2deg) scale(1.02);
+      }
+
+      80% {
+        transform: translate(1px, 0) rotate(2.2deg) scale(1.01);
+      }
+
+      100% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+      }
     }
 
     .tile:hover {
-      background: var(--tile-hover);
-      transform: translateY(-1px);
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: inset 0 -6px 0 rgb(0 0 0 / 22%), 0 0 0 1px rgb(56 189 248 / 35%), 0 0 15px rgb(56 189 248 / 38%);
+      filter: brightness(1.05);
     }
 
-    .tile:active { transform: translateY(0); }
+    .tile:active {
+      transform: translateY(0);
+    }
 
     .tile:disabled {
-      opacity: 0.5;
+      opacity: 0.38;
       cursor: not-allowed;
       transform: none;
+      filter: saturate(0.15) brightness(0.7);
+      box-shadow: none;
     }
 
     .status {
       min-height: 1.5em;
       margin: 0;
+      padding: 10px;
       text-align: center;
-      font-weight: 600;
+      font-weight: 700;
+      border-radius: 10px;
+      border: 1px solid rgb(148 163 184 / 20%);
+      background: rgb(15 23 42 / 55%);
     }
 
-    .status.win { color: var(--accent); }
+    .status.win {
+      color: var(--success);
+      border-color: rgb(34 197 94 / 45%);
+      box-shadow: 0 0 16px rgb(34 197 94 / 22%);
+    }
+
+    .status.stuck {
+      color: #fb923c;
+      border-color: rgb(251 146 60 / 45%);
+      box-shadow: 0 0 16px rgb(251 146 60 / 22%);
+      animation: stuckPulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes stuckPulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 16px rgb(251 146 60 / 22%);
+      }
+
+      50% {
+        box-shadow: 0 0 28px rgb(251 146 60 / 50%);
+      }
+    }
 
     .controls {
-      margin-top: 10px;
+      margin-top: 12px;
       display: flex;
       justify-content: center;
-      gap: 8px;
+      gap: 9px;
       flex-wrap: wrap;
     }
 
     .btn {
-      border: 1px solid #64748b;
-      background: #1e293b;
-      color: var(--text);
-      border-radius: 8px;
-      padding: 8px 12px;
+      border: 1px solid #2563eb;
+      background: linear-gradient(180deg, #1d4ed8 0%, #1e3a8a 100%);
+      color: #eff6ff;
+      border-radius: 9px;
+      padding: 9px 13px;
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      font-size: 0.76rem;
+      box-shadow: inset 0 -3px 0 rgb(0 0 0 / 22%), 0 0 0 1px rgb(59 130 246 / 20%);
+      transition: transform 0.08s ease, filter 0.15s ease, box-shadow 0.15s ease;
     }
 
-    .btn:hover { background: #334155; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn:hover {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+      box-shadow: inset 0 -3px 0 rgb(0 0 0 / 22%), 0 0 12px rgb(59 130 246 / 36%);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: inset 0 -2px 0 rgb(0 0 0 / 14%);
+    }
   </style>
 </head>
+
 <body>
   <main class="game">
-    <h1>3x3 Number Equalizer</h1>
-    <p class="subtitle">Click a tile > 1 to reduce it by 1 and add +1 to orthogonal neighbors. Move is blocked if any neighbor is already 4.</p>
+    <h1>Number Equalizer Arena</h1>
+    <p class="subtitle">Click a tile > 1 to reduce it by 1 and add +1 to orthogonal neighbors. Move is blocked if any
+      neighbor is already 4.</p>
 
     <div class="meta">
       <span id="levelLabel"></span>
       <span id="moveLabel"></span>
+      <span id="hintLabel"></span>
     </div>
 
     <section class="board" id="board" aria-label="3 by 3 game board"></section>
@@ -153,6 +350,7 @@
     const statusEl = document.getElementById('status');
     const levelLabelEl = document.getElementById('levelLabel');
     const moveLabelEl = document.getElementById('moveLabel');
+    const hintLabelEl = document.getElementById('hintLabel');
     const restartBtn = document.getElementById('restartBtn');
     const nextBtn = document.getElementById('nextBtn');
     const newPackBtn = document.getElementById('newPackBtn');
@@ -162,6 +360,10 @@
     let state = [];
     let initialState = [];
     let moves = 0;
+    let levelHintMoves = null;
+    let lastAddedKeys = new Set();
+
+    const minMovesCache = new Map();
 
     function cloneBoard(board) {
       return board.map((row) => row.slice());
@@ -195,6 +397,87 @@
       }
       const neighbors = getNeighbors(row, col);
       return neighbors.every(([r, c]) => board[r][c] > MIN);
+    }
+
+    function boardToKey(board) {
+      return board.flat().join('');
+    }
+
+    function keyToBoard(key) {
+      const values = key.split('').map((digit) => Number(digit));
+      const board = [];
+      for (let r = 0; r < SIZE; r++) {
+        board.push(values.slice(r * SIZE, (r + 1) * SIZE));
+      }
+      return board;
+    }
+
+    function canApplyForwardMoveOnBoard(board, row, col) {
+      if (board[row][col] <= MIN) {
+        return false;
+      }
+
+      return getNeighbors(row, col).every(([r, c]) => board[r][c] < MAX);
+    }
+
+    function applyForwardMoveOnBoard(board, row, col) {
+      if (!canApplyForwardMoveOnBoard(board, row, col)) {
+        return null;
+      }
+
+      const next = cloneBoard(board);
+      next[row][col] -= 1;
+      getNeighbors(row, col).forEach(([r, c]) => {
+        next[r][c] += 1;
+      });
+      return next;
+    }
+
+    function findMinMovesToSolve(startBoard) {
+      const startKey = boardToKey(startBoard);
+      if (minMovesCache.has(startKey)) {
+        return minMovesCache.get(startKey);
+      }
+
+      if (isAllEqual(startBoard)) {
+        minMovesCache.set(startKey, 0);
+        return 0;
+      }
+
+      const queue = [startKey];
+      const dist = new Map([[startKey, 0]]);
+
+      for (let head = 0; head < queue.length; head++) {
+        const key = queue[head];
+        const board = keyToBoard(key);
+        const depth = dist.get(key);
+
+        for (let r = 0; r < SIZE; r++) {
+          for (let c = 0; c < SIZE; c++) {
+            const nextBoard = applyForwardMoveOnBoard(board, r, c);
+            if (!nextBoard) {
+              continue;
+            }
+
+            const nextKey = boardToKey(nextBoard);
+            if (dist.has(nextKey)) {
+              continue;
+            }
+
+            const nextDepth = depth + 1;
+            if (isAllEqual(nextBoard)) {
+              minMovesCache.set(startKey, nextDepth);
+              return nextDepth;
+            }
+
+            dist.set(nextKey, nextDepth);
+            queue.push(nextKey);
+          }
+        }
+      }
+
+      minMovesCache.set(startKey, null);
+      return null;
     }
 
     // Reverse generation move: +1 center, -1 neighbors.
@@ -263,25 +546,116 @@
       return isAllEqual(state);
     }
 
-    function canApplyForwardMove(row, col) {
-      if (state[row][col] <= MIN) {
-        return false;
+    function isStuck() {
+      for (let r = 0; r < SIZE; r++) {
+        for (let c = 0; c < SIZE; c++) {
+          if (canApplyForwardMoveOnBoard(state, r, c)) return false;
+        }
       }
+      return true;
+    }
 
-      // New rule: cannot distribute if any neighbor is already at max.
-      return getNeighbors(row, col).every(([r, c]) => state[r][c] < MAX);
+    function canApplyForwardMove(row, col) {
+      return canApplyForwardMoveOnBoard(state, row, col);
     }
 
     function applyForwardMove(row, col) {
-      if (!canApplyForwardMove(row, col)) {
+      const nextState = applyForwardMoveOnBoard(state, row, col);
+      if (!nextState) {
         return false;
       }
 
-      state[row][col] -= 1;
-      getNeighbors(row, col).forEach(([r, c]) => {
-        state[r][c] += 1;
-      });
+      state = nextState;
       return true;
+    }
+
+    function tileKey(row, col) {
+      return `${row},${col}`;
+    }
+
+    function addParticles(tileEl) {
+      const particleCount = 22;
+      const now = performance.now();
+      const lifeMs = 400;
+
+      for (let i = 0; i < particleCount; i++) {
+        const p = document.createElement('span');
+        p.className = 'particle';
+
+        // Spawn from tile perimeter (slightly outside each edge).
+        const side = Math.floor(Math.random() * 4);
+        let sx = 50;
+        let sy = 50;
+
+        if (side === 0) {
+          sx = -6;
+          sy = Math.random() * 100;
+        } else if (side === 1) {
+          sx = 106;
+          sy = Math.random() * 100;
+        } else if (side === 2) {
+          sx = Math.random() * 100;
+          sy = -6;
+        } else {
+          sx = Math.random() * 100;
+          sy = 106;
+        }
+
+        // Move in one fixed direction (no curvature) based on edge side.
+        const speed = 0.08 + Math.random() * 0.03; // px/ms
+        let vx = 0;
+        let vy = 0;
+
+        if (side === 0) {
+          vx = -speed;
+          vy = (Math.random() - 0.5) * speed * 0.2;
+        } else if (side === 1) {
+          vx = speed;
+          vy = (Math.random() - 0.5) * speed * 0.2;
+        } else if (side === 2) {
+          vx = (Math.random() - 0.5) * speed * 0.2;
+          vy = -speed;
+        } else {
+          vx = (Math.random() - 0.5) * speed * 0.2;
+          vy = speed;
+        }
+
+        const spin = (Math.random() > 0.5 ? 1 : -1) * (80 + Math.random() * 160);
+
+        p.style.setProperty('--sx', `${sx}%`);
+        p.style.setProperty('--sy', `${sy}%`);
+        p.style.opacity = '0';
+        p.style.transform = 'translate(-50%, -50%)';
+        tileEl.appendChild(p);
+
+        const startAt = now;
+
+        function step(ts) {
+          if (!p.isConnected) {
+            return;
+          }
+
+          const t = ts - startAt;
+          const progress = Math.min(1, t / lifeMs);
+
+          const x = vx * t;
+          const y = vy * t;
+          const rot = spin * progress;
+          const scale = 1 - 0.55 * progress;
+          const alpha = progress < 0.08 ? progress / 0.08 : Math.max(0, 1 - progress);
+
+          p.style.opacity = alpha.toFixed(3);
+          p.style.transform = `translate(calc(-50% + ${x.toFixed(2)}px), calc(-50% + ${y.toFixed(2)}px)) rotate(${rot.toFixed(1)}deg) scale(${scale.toFixed(3)})`;
+
+          if (progress < 1) {
+            requestAnimationFrame(step);
+          } else {
+            p.remove();
+          }
+        }
+
+        requestAnimationFrame(step);
+      }
     }
 
     function onTileClick(row, col) {
@@ -301,6 +675,7 @@
         return;
       }
 
+      lastAddedKeys = new Set(getNeighbors(row, col).map(([r, c]) => tileKey(r, c)));
       moves += 1;
       render();
     }
@@ -310,21 +685,35 @@
       initialState = cloneBoard(levels[currentLevel]);
       state = cloneBoard(initialState);
       moves = 0;
+      lastAddedKeys.clear();
+      levelHintMoves = findMinMovesToSolve(initialState);
       render();
     }
 
     function render() {
       const won = isWin();
+      const stuck = !won && isStuck();
       boardEl.innerHTML = '';
 
       for (let r = 0; r < SIZE; r++) {
         for (let c = 0; c < SIZE; c++) {
           const value = state[r][c];
           const btn = document.createElement('button');
-          btn.className = 'tile';
+          btn.className = `tile value-${value}`;
           btn.type = 'button';
-          btn.textContent = String(value);
-          btn.disabled = won || !canApplyForwardMove(r, c);
+
+          const valueEl = document.createElement('span');
+          valueEl.className = 'tile-value';
+          valueEl.textContent = String(value);
+          btn.appendChild(valueEl);
+
+          const addedThisTurn = lastAddedKeys.has(tileKey(r, c));
+          if (addedThisTurn) {
+            btn.classList.add('tile-added');
+            addParticles(btn);
+          }
+
+          btn.disabled = won || stuck || !canApplyForwardMove(r, c);
           btn.addEventListener('click', () => onTileClick(r, c));
           boardEl.appendChild(btn);
         }
@@ -332,16 +721,24 @@
 
       levelLabelEl.textContent = `Level ${currentLevel + 1}/${LEVEL_COUNT}`;
       moveLabelEl.textContent = `Moves: ${moves}`;
+      hintLabelEl.textContent = levelHintMoves === null ? 'Hint: no known solution' : `Hint: ${levelHintMoves} moves`;
 
       if (won) {
+        statusEl.classList.remove('stuck');
         statusEl.classList.add('win');
-        statusEl.textContent = `Solved in ${moves} moves. All tiles are ${state[0][0]}.`;
-      } else {
+        const hintText = levelHintMoves === null ? '' : ` (hint was ${levelHintMoves})`;
+        statusEl.textContent = `Solved in ${moves} moves${hintText}. All tiles are ${state[0][0]}.`;
+      } else if (stuck) {
         statusEl.classList.remove('win');
+        statusEl.classList.add('stuck');
+        statusEl.textContent = 'No more moves! Restart to try again.';
+      } else {
+        statusEl.classList.remove('win', 'stuck');
         statusEl.textContent = 'Make all 9 tiles equal.';
       }
 
       nextBtn.disabled = !won || currentLevel === LEVEL_COUNT - 1;
+      lastAddedKeys.clear();
     }
 
     restartBtn.addEventListener('click', () => {
@@ -365,5 +762,5 @@
     loadLevel(0);
   </script>
 </body>
-</html>
 
+</html>
