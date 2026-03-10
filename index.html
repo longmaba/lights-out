@@ -4,39 +4,275 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3x3 Number Equalizer Prototype</title>
+  <title>Number Equalizer Arena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
   <style>
-    :root {
-      --bg: #050816;
-      --panel: #0b1225;
-      --panel-border: #1e2a4f;
-      --text: #e6f0ff;
-      --accent: #22d3ee;
-      --accent-2: #a78bfa;
-      --success: #22c55e;
-      --muted: #94a3b8;
-    }
-
+    /* === RESET === */
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
-      margin: 0;
       min-height: 100vh;
       display: grid;
       place-items: center;
+      color: #f8fafc;
+    }
+
+    /* ======================================================
+       PIXEL THEME
+       ====================================================== */
+    body.theme-pixel {
+      background-color: #0f0f1a;
+      background-image: repeating-conic-gradient(#181825 0% 25%, #0f0f1a 0% 50%);
+      background-size: 16px 16px;
+      font-family: 'Press Start 2P', monospace;
+      image-rendering: pixelated;
+    }
+
+    body.theme-pixel .game {
+      width: min(96vw, 480px);
+      background: #16213e;
+      border: 4px solid #e2e8f0;
+      box-shadow: 8px 8px 0 #000;
+      padding: 20px;
+    }
+
+    body.theme-pixel h1 {
+      font-size: 0.75rem;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #facc15;
+      text-shadow: 3px 3px 0 #92400e;
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+
+    body.theme-pixel .subtitle {
+      color: #94a3b8;
+      text-align: center;
+      font-size: 0.55rem;
+      line-height: 2;
+      margin-bottom: 14px;
+      border: 2px solid #334155;
+      padding: 8px;
+      background: #0f172a;
+    }
+
+    body.theme-pixel .meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 14px;
+      font-size: 0.52rem;
+    }
+
+    body.theme-pixel .meta span {
+      border: 3px solid #334155;
+      padding: 6px 4px;
+      text-align: center;
+      background: #0f172a;
+      color: #7dd3fc;
+      box-shadow: 3px 3px 0 #000;
+      letter-spacing: 0.04em;
+    }
+
+    body.theme-pixel .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+      padding: 10px;
+      background: #0f172a;
+      border: 4px solid #334155;
+    }
+
+    body.theme-pixel .tile {
+      aspect-ratio: 1 / 1;
+      border: 3px solid #000;
+      border-radius: 0;
+      background: #1e293b;
+      color: #f8fafc;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 1.5rem;
+      cursor: pointer;
+      position: relative;
+      overflow: visible;
+      box-shadow: 4px 4px 0 #000;
+      transition: none;
+      image-rendering: pixelated;
+    }
+
+    body.theme-pixel .tile.value-1 {
+      background: #334155;
+      border-color: #64748b;
+      color: #cbd5e1;
+      box-shadow: 4px 4px 0 #0f172a;
+    }
+
+    body.theme-pixel .tile.value-2 {
+      background: #1d4ed8;
+      border-color: #93c5fd;
+      color: #dbeafe;
+      box-shadow: 4px 4px 0 #1e3a8a;
+    }
+
+    body.theme-pixel .tile.value-3 {
+      background: #7c3aed;
+      border-color: #c4b5fd;
+      color: #ede9fe;
+      box-shadow: 4px 4px 0 #4c1d95;
+    }
+
+    body.theme-pixel .tile.value-4 {
+      background: #b45309;
+      border-color: #fcd34d;
+      color: #fef3c7;
+      box-shadow: 4px 4px 0 #78350f;
+    }
+
+    body.theme-pixel .tile:not(:disabled):hover {
+      transform: translate(-2px, -2px);
+      filter: brightness(1.18);
+    }
+
+    body.theme-pixel .tile.value-1:not(:disabled):hover {
+      box-shadow: 6px 6px 0 #0f172a;
+    }
+
+    body.theme-pixel .tile.value-2:not(:disabled):hover {
+      box-shadow: 6px 6px 0 #1e3a8a;
+    }
+
+    body.theme-pixel .tile.value-3:not(:disabled):hover {
+      box-shadow: 6px 6px 0 #4c1d95;
+    }
+
+    body.theme-pixel .tile.value-4:not(:disabled):hover {
+      box-shadow: 6px 6px 0 #78350f;
+    }
+
+    body.theme-pixel .tile:not(:disabled):active {
+      transform: translate(4px, 4px);
+      box-shadow: none !important;
+    }
+
+    body.theme-pixel .tile:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      filter: saturate(0.1) brightness(0.65);
+      box-shadow: 2px 2px 0 #000;
+    }
+
+    body.theme-pixel .particle {
+      position: absolute;
+      left: var(--sx, 50%);
+      top: var(--sy, 50%);
+      width: 6px;
+      height: 6px;
+      border-radius: 0;
+      background: #facc15;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      image-rendering: pixelated;
+      will-change: transform, opacity;
+    }
+
+    body.theme-pixel .status {
+      min-height: 1.5em;
+      margin: 0;
+      padding: 10px;
+      text-align: center;
+      font-size: 0.55rem;
+      line-height: 2;
+      border: 3px solid #334155;
+      background: #0f172a;
+      color: #94a3b8;
+      box-shadow: 3px 3px 0 #000;
+    }
+
+    body.theme-pixel .status.win {
+      color: #4ade80;
+      border-color: #4ade80;
+      box-shadow: 3px 3px 0 #14532d;
+      animation: winBlink 600ms steps(1) 3;
+    }
+
+    body.theme-pixel .status.stuck {
+      color: #fb923c;
+      border-color: #fb923c;
+      box-shadow: 3px 3px 0 #7c2d12;
+      animation: stuckBlink 500ms steps(1) infinite;
+    }
+
+    body.theme-pixel .controls {
+      margin-top: 12px;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    body.theme-pixel .btn {
+      border: 3px solid #93c5fd;
+      background: #1d4ed8;
+      color: #dbeafe;
+      border-radius: 0;
+      padding: 8px 10px;
+      cursor: pointer;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      box-shadow: 4px 4px 0 #000;
+      transition: none;
+    }
+
+    body.theme-pixel .btn:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0 #000;
+      filter: brightness(1.15);
+    }
+
+    body.theme-pixel .btn:active {
+      transform: translate(4px, 4px);
+      box-shadow: none;
+    }
+
+    body.theme-pixel .btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: 2px 2px 0 #000;
+      filter: saturate(0.2);
+    }
+
+    body.theme-pixel #themeBtn {
+      border-color: #c4b5fd;
+      background: #7c3aed;
+    }
+
+    /* ======================================================
+       NEON THEME
+       ====================================================== */
+    body.theme-neon {
       background:
         radial-gradient(circle at 20% 8%, rgb(167 139 250 / 18%), transparent 40%),
         radial-gradient(circle at 80% 12%, rgb(34 211 238 / 20%), transparent 45%),
-        linear-gradient(180deg, #040714 0%, var(--bg) 60%, #02040f 100%);
-      color: var(--text);
+        linear-gradient(180deg, #040714 0%, #050816 60%, #02040f 100%);
       font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
       position: relative;
       overflow-x: hidden;
     }
 
-    body::before {
+    body.theme-neon::before {
       content: '';
       position: fixed;
       inset: 0;
@@ -48,22 +284,17 @@
       background-size: 28px 28px;
     }
 
-    .game {
+    body.theme-neon .game {
       width: min(92vw, 460px);
-      background:
-        linear-gradient(160deg, rgb(14 22 45 / 95%), rgb(7 13 28 / 95%)),
-        color-mix(in hsl, var(--panel) 88%, black);
-      border: 1px solid var(--panel-border);
+      background: linear-gradient(160deg, rgb(14 22 45 / 95%), rgb(7 13 28 / 95%));
+      border: 1px solid #1e2a4f;
       border-radius: 16px;
       padding: 20px;
-      box-shadow:
-        0 18px 55px rgb(0 0 0 / 52%),
-        0 0 0 1px rgb(34 211 238 / 18%),
-        0 0 24px rgb(34 211 238 / 18%);
+      box-shadow: 0 18px 55px rgb(0 0 0 / 52%), 0 0 0 1px rgb(34 211 238 / 18%), 0 0 24px rgb(34 211 238 / 18%);
       backdrop-filter: blur(2px);
     }
 
-    h1 {
+    body.theme-neon h1 {
       margin: 0 0 8px;
       font-size: 1.35rem;
       text-align: center;
@@ -72,27 +303,30 @@
       text-shadow: 0 0 14px rgb(34 211 238 / 35%);
     }
 
-    .subtitle {
+    body.theme-neon .subtitle {
       margin: 0 0 12px;
-      color: var(--muted);
+      color: #94a3b8;
       text-align: center;
       font-size: 0.9rem;
       line-height: 1.45;
+      border: none;
+      padding: 0;
+      background: none;
     }
 
-    .meta {
+    body.theme-neon .meta {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
       margin: 0 0 14px;
-      color: var(--muted);
+      color: #94a3b8;
       font-size: 0.84rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
 
-    .meta span {
+    body.theme-neon .meta span {
       border: 1px solid rgb(56 189 248 / 24%);
       border-radius: 9px;
       padding: 7px 8px;
@@ -101,7 +335,7 @@
       box-shadow: inset 0 0 10px rgb(56 189 248 / 9%);
     }
 
-    .board {
+    body.theme-neon .board {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
@@ -113,12 +347,12 @@
       box-shadow: inset 0 0 20px rgb(34 211 238 / 10%);
     }
 
-    .tile {
-      aspect-ratio: 1 / 1;
+    body.theme-neon .tile {
+      aspect-ratio: 1/1;
       border: 1px solid #3b4f79;
       border-radius: 11px;
       background: linear-gradient(180deg, #182a52 0%, #0f1c3a 100%);
-      color: var(--text);
+      color: #e6f0ff;
       font-size: 2rem;
       font-weight: 800;
       cursor: pointer;
@@ -129,57 +363,57 @@
       box-shadow: inset 0 -6px 0 rgb(0 0 0 / 20%), 0 0 0 1px rgb(59 130 246 / 22%);
     }
 
-    .tile.value-1 {
+    body.theme-neon .tile.value-1 {
       border-color: #475569;
-      background:
-        radial-gradient(circle at 30% 20%, rgb(255 255 255 / 18%), transparent 42%),
-        linear-gradient(180deg, #334155 0%, #1e293b 100%);
+      background: radial-gradient(circle at 30% 20%, rgb(255 255 255/18%), transparent 42%), linear-gradient(180deg, #334155 0%, #1e293b 100%);
       color: #f1f5f9;
-      text-shadow: 0 0 10px rgb(241 245 249 / 36%);
-      box-shadow: inset 0 -6px 0 rgb(0 0 0 / 24%), 0 0 0 1px rgb(148 163 184 / 30%), 0 0 14px rgb(148 163 184 / 28%);
+      text-shadow: 0 0 10px rgb(241 245 249/36%);
+      box-shadow: inset 0 -6px 0 rgb(0 0 0/24%), 0 0 0 1px rgb(148 163 184/30%), 0 0 14px rgb(148 163 184/28%);
     }
 
-    .tile.value-2 {
+    body.theme-neon .tile.value-2 {
       border-color: #2563eb;
-      background:
-        radial-gradient(circle at 32% 18%, rgb(255 255 255 / 22%), transparent 42%),
-        linear-gradient(180deg, #38bdf8 0%, #2563eb 48%, #1e3a8a 100%);
+      background: radial-gradient(circle at 32% 18%, rgb(255 255 255/22%), transparent 42%), linear-gradient(180deg, #38bdf8 0%, #2563eb 48%, #1e3a8a 100%);
       color: #ecfeff;
-      text-shadow: 0 0 12px rgb(103 232 249 / 55%);
-      box-shadow: inset 0 -6px 0 rgb(0 0 0 / 24%), 0 0 0 1px rgb(56 189 248 / 42%), 0 0 16px rgb(56 189 248 / 42%);
+      text-shadow: 0 0 12px rgb(103 232 249/55%);
+      box-shadow: inset 0 -6px 0 rgb(0 0 0/24%), 0 0 0 1px rgb(56 189 248/42%), 0 0 16px rgb(56 189 248/42%);
     }
 
-    .tile.value-3 {
+    body.theme-neon .tile.value-3 {
       border-color: #7c3aed;
-      background:
-        radial-gradient(circle at 32% 18%, rgb(255 255 255 / 20%), transparent 42%),
-        linear-gradient(180deg, #c084fc 0%, #8b5cf6 45%, #6d28d9 100%);
+      background: radial-gradient(circle at 32% 18%, rgb(255 255 255/20%), transparent 42%), linear-gradient(180deg, #c084fc 0%, #8b5cf6 45%, #6d28d9 100%);
       color: #f5f3ff;
-      text-shadow: 0 0 12px rgb(196 181 253 / 56%);
-      box-shadow: inset 0 -6px 0 rgb(0 0 0 / 24%), 0 0 0 1px rgb(167 139 250 / 42%), 0 0 16px rgb(167 139 250 / 40%);
+      text-shadow: 0 0 12px rgb(196 181 253/56%);
+      box-shadow: inset 0 -6px 0 rgb(0 0 0/24%), 0 0 0 1px rgb(167 139 250/42%), 0 0 16px rgb(167 139 250/40%);
     }
 
-    .tile.value-4 {
+    body.theme-neon .tile.value-4 {
       border-color: #d97706;
-      background:
-        radial-gradient(circle at 32% 18%, rgb(255 255 255 / 20%), transparent 42%),
-        linear-gradient(180deg, #fcd34d 0%, #f59e0b 43%, #c2410c 100%);
+      background: radial-gradient(circle at 32% 18%, rgb(255 255 255/20%), transparent 42%), linear-gradient(180deg, #fcd34d 0%, #f59e0b 43%, #c2410c 100%);
       color: #fff7ed;
-      text-shadow: 0 0 12px rgb(253 186 116 / 60%);
-      box-shadow: inset 0 -6px 0 rgb(0 0 0 / 24%), 0 0 0 1px rgb(251 146 60 / 46%), 0 0 18px rgb(249 115 22 / 40%);
+      text-shadow: 0 0 12px rgb(253 186 116/60%);
+      box-shadow: inset 0 -6px 0 rgb(0 0 0/24%), 0 0 0 1px rgb(251 146 60/46%), 0 0 18px rgb(249 115 22/40%);
     }
 
-    .tile-value {
-      display: inline-block;
-      position: relative;
-      z-index: 2;
+    body.theme-neon .tile:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: inset 0 -6px 0 rgb(0 0 0/22%), 0 0 0 1px rgb(56 189 248/35%), 0 0 15px rgb(56 189 248/38%);
+      filter: brightness(1.05);
     }
 
-    .tile-added {
-      animation: tileShakeRotate 320ms ease-out;
+    body.theme-neon .tile:active {
+      transform: translateY(0);
     }
 
-    .particle {
+    body.theme-neon .tile:disabled {
+      opacity: 0.38;
+      cursor: not-allowed;
+      transform: none;
+      filter: saturate(0.15) brightness(0.7);
+      box-shadow: none;
+    }
+
+    body.theme-neon .particle {
       position: absolute;
       left: var(--sx, 50%);
       top: var(--sy, 50%);
@@ -191,91 +425,37 @@
       pointer-events: none;
       transform: translate(-50%, -50%);
       z-index: 1;
-      box-shadow: 0 0 8px rgb(245 158 11 / 60%);
+      box-shadow: 0 0 8px rgb(245 158 11/60%);
       will-change: transform, opacity;
     }
 
-    @keyframes tileShakeRotate {
-      0% {
-        transform: translate(0, 0) rotate(0deg) scale(1);
-      }
-
-      20% {
-        transform: translate(-1px, 1px) rotate(-5deg) scale(1.03);
-      }
-
-      40% {
-        transform: translate(1px, -1px) rotate(4.6deg) scale(1.04);
-      }
-
-      60% {
-        transform: translate(-1px, 0) rotate(-3.2deg) scale(1.02);
-      }
-
-      80% {
-        transform: translate(1px, 0) rotate(2.2deg) scale(1.01);
-      }
-
-      100% {
-        transform: translate(0, 0) rotate(0deg) scale(1);
-      }
-    }
-
-    .tile:hover {
-      transform: translateY(-2px) scale(1.02);
-      box-shadow: inset 0 -6px 0 rgb(0 0 0 / 22%), 0 0 0 1px rgb(56 189 248 / 35%), 0 0 15px rgb(56 189 248 / 38%);
-      filter: brightness(1.05);
-    }
-
-    .tile:active {
-      transform: translateY(0);
-    }
-
-    .tile:disabled {
-      opacity: 0.38;
-      cursor: not-allowed;
-      transform: none;
-      filter: saturate(0.15) brightness(0.7);
-      box-shadow: none;
-    }
-
-    .status {
+    body.theme-neon .status {
       min-height: 1.5em;
       margin: 0;
       padding: 10px;
       text-align: center;
       font-weight: 700;
       border-radius: 10px;
-      border: 1px solid rgb(148 163 184 / 20%);
-      background: rgb(15 23 42 / 55%);
+      font-size: 1rem;
+      color: #e6f0ff;
+      border: 1px solid rgb(148 163 184/20%);
+      background: rgb(15 23 42/55%);
     }
 
-    .status.win {
-      color: var(--success);
-      border-color: rgb(34 197 94 / 45%);
-      box-shadow: 0 0 16px rgb(34 197 94 / 22%);
+    body.theme-neon .status.win {
+      color: #22c55e;
+      border-color: rgb(34 197 94/45%);
+      box-shadow: 0 0 16px rgb(34 197 94/22%);
     }
 
-    .status.stuck {
+    body.theme-neon .status.stuck {
       color: #fb923c;
-      border-color: rgb(251 146 60 / 45%);
-      box-shadow: 0 0 16px rgb(251 146 60 / 22%);
+      border-color: rgb(251 146 60/45%);
+      box-shadow: 0 0 16px rgb(251 146 60/22%);
       animation: stuckPulse 1.8s ease-in-out infinite;
     }
 
-    @keyframes stuckPulse {
-
-      0%,
-      100% {
-        box-shadow: 0 0 16px rgb(251 146 60 / 22%);
-      }
-
-      50% {
-        box-shadow: 0 0 28px rgb(251 146 60 / 50%);
-      }
-    }
-
-    .controls {
+    body.theme-neon .controls {
       margin-top: 12px;
       display: flex;
       justify-content: center;
@@ -283,7 +463,7 @@
       flex-wrap: wrap;
     }
 
-    .btn {
+    body.theme-neon .btn {
       border: 1px solid #2563eb;
       background: linear-gradient(180deg, #1d4ed8 0%, #1e3a8a 100%);
       color: #eff6ff;
@@ -294,30 +474,116 @@
       letter-spacing: 0.03em;
       text-transform: uppercase;
       font-size: 0.76rem;
-      box-shadow: inset 0 -3px 0 rgb(0 0 0 / 22%), 0 0 0 1px rgb(59 130 246 / 20%);
+      box-shadow: inset 0 -3px 0 rgb(0 0 0/22%), 0 0 0 1px rgb(59 130 246/20%);
       transition: transform 0.08s ease, filter 0.15s ease, box-shadow 0.15s ease;
     }
 
-    .btn:hover {
+    body.theme-neon .btn:hover {
       filter: brightness(1.08);
       transform: translateY(-1px);
-      box-shadow: inset 0 -3px 0 rgb(0 0 0 / 22%), 0 0 12px rgb(59 130 246 / 36%);
+      box-shadow: inset 0 -3px 0 rgb(0 0 0/22%), 0 0 12px rgb(59 130 246/36%);
     }
 
-    .btn:active {
+    body.theme-neon .btn:active {
       transform: translateY(0);
     }
 
-    .btn:disabled {
+    body.theme-neon .btn:disabled {
       opacity: 0.45;
       cursor: not-allowed;
       transform: none;
-      box-shadow: inset 0 -2px 0 rgb(0 0 0 / 14%);
+      box-shadow: inset 0 -2px 0 rgb(0 0 0/14%);
+    }
+
+    body.theme-neon #themeBtn {
+      border-color: #a78bfa;
+      background: linear-gradient(180deg, #7c3aed 0%, #4c1d95 100%);
+    }
+
+    /* ======================================================
+       SHARED
+       ====================================================== */
+    .tile-value {
+      display: inline-block;
+      position: relative;
+      z-index: 2;
+    }
+
+    .tile-added {
+      animation: tileShakeFlash 320ms steps(4, end);
+    }
+
+    @keyframes tileShakeFlash {
+      0% {
+        transform: translate(0, 0) rotate(0deg);
+        filter: brightness(2.2);
+      }
+
+      20% {
+        transform: translate(-4px, 1px) rotate(-4deg);
+        filter: brightness(1.8);
+      }
+
+      40% {
+        transform: translate(4px, -1px) rotate(4deg);
+        filter: brightness(1.5);
+      }
+
+      60% {
+        transform: translate(-3px, 0) rotate(-2.5deg);
+        filter: brightness(1.3);
+      }
+
+      80% {
+        transform: translate(3px, 0) rotate(2deg);
+        filter: brightness(1.1);
+      }
+
+      100% {
+        transform: translate(0, 0) rotate(0deg);
+        filter: brightness(1);
+      }
+    }
+
+    @keyframes winBlink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0;
+      }
+    }
+
+    @keyframes stuckBlink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    @keyframes stuckPulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 16px rgb(251 146 60/22%);
+      }
+
+      50% {
+        box-shadow: 0 0 28px rgb(251 146 60/50%);
+      }
     }
   </style>
 </head>
 
-<body>
+<body class="theme-pixel">
   <main class="game">
     <h1>Number Equalizer Arena</h1>
     <p class="subtitle">Click a tile > 1 to reduce it by 1 and add +1 to orthogonal neighbors. Move is blocked if any
@@ -337,6 +603,7 @@
       <button class="btn" id="restartBtn" type="button">Restart Level</button>
       <button class="btn" id="nextBtn" type="button">Next Level</button>
       <button class="btn" id="newPackBtn" type="button">New Pack</button>
+      <button class="btn" id="themeBtn" type="button">🌟 Neon</button>
     </div>
   </main>
 
@@ -756,6 +1023,13 @@
     newPackBtn.addEventListener('click', () => {
       levels = generateLevelPack();
       loadLevel(0);
+    });
+
+    const themeBtn = document.getElementById('themeBtn');
+    themeBtn.addEventListener('click', () => {
+      const isPixel = document.body.classList.contains('theme-pixel');
+      document.body.className = isPixel ? 'theme-neon' : 'theme-pixel';
+      themeBtn.textContent = isPixel ? '🎮 Pixel' : '🌟 Neon';
     });
 
     levels = generateLevelPack();
