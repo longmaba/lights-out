@@ -169,6 +169,12 @@
       box-shadow: 2px 2px 0 #000;
     }
 
+    body.theme-pixel .board.win-state .tile:disabled {
+      opacity: 1;
+      filter: none;
+      box-shadow: inherit;
+    }
+
     body.theme-pixel .particle {
       position: absolute;
       left: var(--sx, 50%);
@@ -411,6 +417,12 @@
       transform: none;
       filter: saturate(0.15) brightness(0.7);
       box-shadow: none;
+    }
+
+    body.theme-neon .board.win-state .tile:disabled {
+      opacity: 1;
+      filter: none;
+      box-shadow: inherit;
     }
 
     body.theme-neon .particle {
@@ -960,6 +972,7 @@
     function render() {
       const won = isWin();
       const stuck = !won && isStuck();
+      boardEl.classList.toggle('win-state', won);
       boardEl.innerHTML = '';
 
       for (let r = 0; r < SIZE; r++) {
